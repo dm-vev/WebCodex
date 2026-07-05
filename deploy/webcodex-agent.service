@@ -1,0 +1,14 @@
+[Unit]
+Description=WebCodex local MCP agent
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+EnvironmentFile=/etc/webcodex/agent.env
+ExecStart=/usr/local/bin/webcodex-agent
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target

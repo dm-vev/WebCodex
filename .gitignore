@@ -1,0 +1,8 @@
+/bin/
+third_party/codex/.git/
+third_party/codex/**/target/
+third_party/codex/node_modules/
+third_party/codex/**/node_modules/
+*.log
+.env
+.env.*
