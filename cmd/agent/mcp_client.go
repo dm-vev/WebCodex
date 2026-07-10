@@ -14,16 +14,10 @@ import (
 	"time"
 )
 
-const initializeRequest = `{
-	"jsonrpc": "2.0",
-	"id": "webcodex-init",
-	"method": "initialize",
-	"params": {
-		"protocolVersion": "2025-06-18",
-		"capabilities": {},
-		"clientInfo": {"name": "webcodex-agent", "version": "0.1.0"}
-	}
-}`
+// initializeRequest stays on one line because Codex MCP uses newline-delimited JSON-RPC over stdio.
+const initializeRequest = `{"jsonrpc":"2.0","id":"webcodex-init",` +
+	`"method":"initialize","params":{"protocolVersion":"2025-06-18",` +
+	`"capabilities":{},"clientInfo":{"name":"webcodex-agent","version":"0.1.0"}}}`
 
 type jsonrpcMessage struct {
 	ID json.RawMessage `json:"id,omitempty"`

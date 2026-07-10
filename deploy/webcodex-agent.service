@@ -5,6 +5,10 @@ Wants=network-online.target
 
 [Service]
 Type=simple
+User=webcodex
+Group=webcodex
+Environment=HOME=/home/webcodex
+Environment=CODEX_HOME=/home/webcodex/.codex
 EnvironmentFile=/etc/webcodex/agent.env
 ExecStart=/usr/local/bin/webcodex-agent
 Restart=always

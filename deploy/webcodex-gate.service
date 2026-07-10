@@ -5,6 +5,9 @@ Wants=network-online.target
 
 [Service]
 Type=simple
+User=webcodex
+Group=webcodex
+Environment=HOME=/home/webcodex
 EnvironmentFile=/etc/webcodex/gate.env
 ExecStart=/usr/local/bin/webcodex-gate
 Restart=always
