@@ -774,7 +774,7 @@ impl CodexThread {
         router: &crate::tools::router::ToolRouter,
     ) -> Vec<DirectToolEntry> {
         router
-            .model_visible_specs()
+            .native_mcp_specs()
             .into_iter()
             .flat_map(direct_tool_entries_from_spec)
             .collect()

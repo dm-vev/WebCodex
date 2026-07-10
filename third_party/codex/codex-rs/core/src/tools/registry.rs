@@ -360,6 +360,23 @@ impl ToolRegistry {
         self.tools.get(name).map(Arc::clone)
     }
 
+    pub(crate) fn native_mcp_specs(&self) -> Vec<ToolSpec> {
+        let mut specs = self
+            .tools
+            .values()
+            .filter(|tool| {
+                let name = tool.tool_name();
+                tool.exposure().is_direct()
+                    && codex_code_mode::is_code_mode_nested_tool(
+                        &codex_tools::code_mode_name_for_tool_name(&name),
+                    )
+            })
+            .map(|tool| tool.spec())
+            .collect::<Vec<_>>();
+        specs.sort_by(|left, right| left.name().cmp(right.name()));
+        specs
+    }
+
     #[cfg(test)]
     pub(crate) fn tool_names_for_test(&self) -> Vec<ToolName> {
         let mut names = self.tools.keys().cloned().collect::<Vec<_>>();

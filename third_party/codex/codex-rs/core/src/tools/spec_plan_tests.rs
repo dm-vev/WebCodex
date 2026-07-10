@@ -56,6 +56,7 @@ struct ToolPlanInputs {
 struct ToolPlanProbe {
     visible_specs: Vec<ToolSpec>,
     visible_names: Vec<String>,
+    native_mcp_names: Vec<String>,
     namespace_functions: BTreeMap<String, Vec<String>>,
     registered_names: Vec<String>,
     exposures: BTreeMap<String, ToolExposure>,
@@ -64,6 +65,11 @@ struct ToolPlanProbe {
 impl ToolPlanProbe {
     fn from_router(router: ToolRouter) -> Self {
         let visible_specs = router.model_visible_specs();
+        let native_mcp_names = router
+            .native_mcp_specs()
+            .iter()
+            .map(|spec| spec.name().to_string())
+            .collect::<Vec<_>>();
         let visible_names = visible_specs
             .iter()
             .map(|spec| spec.name().to_string())
@@ -105,6 +111,7 @@ impl ToolPlanProbe {
         Self {
             visible_specs,
             visible_names,
+            native_mcp_names,
             namespace_functions,
             registered_names,
             exposures,
@@ -127,6 +134,26 @@ impl ToolPlanProbe {
                 !self.visible_names.iter().any(|visible| visible == name),
                 "expected visible tool `{name}` to be absent from {:?}",
                 self.visible_names
+            );
+        }
+    }
+
+    fn assert_native_mcp_contains(&self, expected: &[&str]) {
+        for name in expected {
+            assert!(
+                self.native_mcp_names.iter().any(|visible| visible == name),
+                "expected native MCP tool `{name}` in {:?}",
+                self.native_mcp_names
+            );
+        }
+    }
+
+    fn assert_native_mcp_lacks(&self, expected_absent: &[&str]) {
+        for name in expected_absent {
+            assert!(
+                !self.native_mcp_names.iter().any(|visible| visible == name),
+                "expected native MCP tool `{name}` to be absent from {:?}",
+                self.native_mcp_names
             );
         }
     }
@@ -1083,6 +1110,11 @@ async fn code_mode_only_exposes_code_executor_and_hides_nested_tools() {
     )
     .await;
     code_mode_only.assert_visible_contains(&[
+        codex_code_mode::PUBLIC_TOOL_NAME,
+        codex_code_mode::WAIT_TOOL_NAME,
+    ]);
+    code_mode_only.assert_native_mcp_contains(&["exec_command"]);
+    code_mode_only.assert_native_mcp_lacks(&[
         codex_code_mode::PUBLIC_TOOL_NAME,
         codex_code_mode::WAIT_TOOL_NAME,
     ]);

@@ -77,6 +77,10 @@ impl ToolRouter {
         self.model_visible_specs.clone()
     }
 
+    pub(crate) fn native_mcp_specs(&self) -> Vec<ToolSpec> {
+        self.registry.native_mcp_specs()
+    }
+
     #[cfg(test)]
     pub(crate) fn registered_tool_names_for_test(&self) -> Vec<ToolName> {
         self.registry.tool_names_for_test()
