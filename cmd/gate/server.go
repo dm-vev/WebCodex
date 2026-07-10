@@ -26,6 +26,7 @@ type server struct {
 	queue   chan protocol.AgentRequest
 	mu      sync.Mutex
 	pending map[string]chan protocol.AgentResponse
+	stream  *activeAgentStream
 }
 
 // newServer builds the gate from environment variables and validates required secrets.

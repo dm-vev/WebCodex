@@ -5,11 +5,40 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"time"
 
 	"webcodex/internal/protocol"
 )
+
+type activeAgentStream struct {
+	cancel context.CancelFunc
+}
+
+func (s *server) activateAgentStream(parent context.Context) (context.Context, *activeAgentStream, bool) {
+	streamCtx, cancel := context.WithCancel(parent)
+	stream := &activeAgentStream{cancel: cancel}
+
+	s.mu.Lock()
+	previous := s.stream
+	s.stream = stream
+	s.mu.Unlock()
+	if previous != nil {
+		previous.cancel()
+	}
+
+	return streamCtx, stream, previous != nil
+}
+
+func (s *server) deactivateAgentStream(stream *activeAgentStream) {
+	stream.cancel()
+	s.mu.Lock()
+	if s.stream == stream {
+		s.stream = nil
+	}
+	s.mu.Unlock()
+}
 
 // Agent requests are correlated by random IDs because results arrive on a separate HTTP endpoint.
 func (s *server) callAgent(r *http.Request, request json.RawMessage) (protocol.AgentResponse, error) {
@@ -79,6 +108,13 @@ func (s *server) handleAgentStream(w http.ResponseWriter, r *http.Request) {
 	}
 	flusher.Flush()
 
+	streamCtx, stream, replaced := s.activateAgentStream(r.Context())
+	log.Printf("agent stream connected replaced=%t", replaced)
+	defer func() {
+		s.deactivateAgentStream(stream)
+		log.Printf("agent stream disconnected")
+	}()
+
 	heartbeat := time.NewTicker(5 * time.Second)
 	defer heartbeat.Stop()
 
@@ -86,6 +122,7 @@ func (s *server) handleAgentStream(w http.ResponseWriter, r *http.Request) {
 	for {
 		select {
 		case request := <-s.queue:
+			log.Printf("agent stream dispatch id=%s bytes=%d", request.ID, len(request.Request))
 			if err := enc.Encode(request); err != nil {
 				return
 			}
@@ -95,7 +132,7 @@ func (s *server) handleAgentStream(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			flusher.Flush()
-		case <-r.Context().Done():
+		case <-streamCtx.Done():
 			return
 		}
 	}
