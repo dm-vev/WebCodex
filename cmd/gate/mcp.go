@@ -94,7 +94,7 @@ func (s *server) handleMCP(w http.ResponseWriter, r *http.Request) {
 		log.Printf("mcp response ok method=%q id=%s local=true elapsed=%s", msg.Method, string(msg.ID), time.Since(started))
 		return
 	}
-	result, handled, err := localMCPResult(msg.Method, body)
+	result, handled, err := localMCPResult(msg.Method, body, s.toolCards)
 	if err != nil {
 		log.Printf("mcp local response error method=%q id=%s error=%v", msg.Method, string(msg.ID), err)
 		writeRPCError(w, msg.ID, -32000, err.Error())

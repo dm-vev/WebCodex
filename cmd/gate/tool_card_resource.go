@@ -52,17 +52,24 @@ func renderToolCardHTML() (string, error) {
 func localMCPResult(
 	method string,
 	request json.RawMessage,
+	toolCards bool,
 ) (map[string]any, bool, error) {
 	switch method {
 	case "ping":
 		return map[string]any{}, true, nil
 	case "resources/list":
+		if !toolCards {
+			return map[string]any{"resources": []any{}}, true, nil
+		}
 		resources := []any{toolCardResource(toolCardURI)}
 		for _, uri := range toolCardLegacyURIs {
 			resources = append(resources, toolCardResource(uri))
 		}
 		return map[string]any{"resources": resources}, true, nil
 	case "resources/read":
+		if !toolCards {
+			return map[string]any{"contents": []any{}}, true, nil
+		}
 		uri, ok := resourceReadURI(request)
 		if !ok || !toolCardURIKnown(uri) {
 			return map[string]any{"contents": []any{}}, true, nil

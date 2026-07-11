@@ -23,7 +23,7 @@ func TestRenderToolCardHTMLMatchesEmbeddedTemplate(t *testing.T) {
 func TestLocalMCPResultReadsToolCardResource(t *testing.T) {
 	request := json.RawMessage(`{"params":{"uri":"ui://widget/webcodex-tool-card-v18.html"}}`)
 
-	result, ok, err := localMCPResult("resources/read", request)
+	result, ok, err := localMCPResult("resources/read", request, true)
 	if err != nil {
 		t.Fatalf("read tool card resource: %v", err)
 	}
@@ -70,7 +70,7 @@ func TestLocalMCPResultReadsToolCardResource(t *testing.T) {
 func TestLocalMCPResultReadsLegacyToolCardResource(t *testing.T) {
 	request := json.RawMessage(`{"params":{"uri":"ui://widget/webcodex-tool-card-v6.html"}}`)
 
-	result, ok, err := localMCPResult("resources/read", request)
+	result, ok, err := localMCPResult("resources/read", request, true)
 	if err != nil {
 		t.Fatalf("read tool card resource: %v", err)
 	}
@@ -84,5 +84,27 @@ func TestLocalMCPResultReadsLegacyToolCardResource(t *testing.T) {
 	}
 	if !strings.Contains(content["text"].(string), "Execute Command") {
 		t.Fatal("legacy resource did not return latest html")
+	}
+}
+
+func TestLocalMCPResultHidesToolCardResourcesWhenDisabled(t *testing.T) {
+	list, ok, err := localMCPResult("resources/list", nil, false)
+	if err != nil || !ok {
+		t.Fatalf("resources/list = %#v, %v, handled=%t", list, err, ok)
+	}
+	if resources := list["resources"].([]any); len(resources) != 0 {
+		t.Fatalf("resources = %#v, want empty", resources)
+	}
+
+	read, ok, err := localMCPResult(
+		"resources/read",
+		json.RawMessage(`{"params":{"uri":"ui://widget/webcodex-tool-card-v18.html"}}`),
+		false,
+	)
+	if err != nil || !ok {
+		t.Fatalf("resources/read = %#v, %v, handled=%t", read, err, ok)
+	}
+	if contents := read["contents"].([]any); len(contents) != 0 {
+		t.Fatalf("contents = %#v, want empty", contents)
 	}
 }
